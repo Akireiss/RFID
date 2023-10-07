@@ -1,5 +1,5 @@
 <?php
-// Include your database connection here
+
 include 'db_conn.php';
 
 
