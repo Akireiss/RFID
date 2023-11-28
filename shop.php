@@ -406,79 +406,86 @@ include 'includes/footer.php';
                 </div>
             </div>
 
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header pb-0 px-3">
-                        <h6 class="mb-0">General Bill</h6>
-                    </div>
-                    <div class="card-body">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <!-- <th>Quantity</th> -->
-                                    <th>Weight</th>
-                                    <th>Price</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                if (!isset($_SESSION['cart'])) {
-                                    $_SESSION['cart'] = array();
-                                }
-                                $totalWeight = 0;
-                                $totalPrice = 0;
+<div class="col-md-6">
+    <div class="card">
+        <div class="card-header pb-0 px-3">
+            <h6 class="mb-0">General Bill</h6>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <!-- <th>Quantity</th> -->
+                        <th>Weight</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    if (!isset($_SESSION['cart'])) {
+                        $_SESSION['cart'] = array();
+                    }
+                    $totalWeight = 0;
+                    $totalPrice = 0;
+                    $productCount = 0; // Counter for the number of products in the cart
 
-                                foreach ($_SESSION['cart'] as $cartItem) {
-                                    // Cast $cartItem['weight'] to float
-                                    $weight = floatval($cartItem['weight']);
+                    foreach ($_SESSION['cart'] as $cartItem) {
+                        // Cast $cartItem['weight'] to float
+                        $weight = floatval($cartItem['weight']);
 
-                                    $totalWeight += $weight;
-                                    $totalPrice += $cartItem['unit_price'];
-                                    ?>
-                                    <tr>
-                                        <td><?php echo $cartItem['item']; ?></td>
-                                        <!-- <td><?php echo $cartItem['quantity']; ?></td> -->
-                                        <td><?php echo $weight; ?></td>
-                                        <td><?php echo $cartItem['unit_price']; ?></td>
-                                        <td>
-                                            <form method="post">
-                                                <input type="hidden" name="remove_from_cart" value="<?php echo $cartItem['barcode']; ?>">
-                                                <button type="submit" class="btn btn-danger btn-sm">X</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <?php } ?>
-                                <tr>
-                                    <td colspan="2"></td>
-                                    <td>Total Weight: <?php echo $totalWeight; ?></td>
-                                    <td>Total Price: <?php echo $totalPrice; ?></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <form method="post">
-                            <button type="submit" name="clear_cart" class="btn btn-danger">Clear Cart</button>
-                        </form>
-                        <form method="post" class="mt-3">
-    <div class="form-group">
-        <input type="text" name="rfid_card_id" required placeholder="RFID Card ID" class="form-control">
-    </div>
-    <button type="submit" name="submit_transaction" class="btn btn-success">Submit Transaction</button>
-    <?php
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_transaction'])) {
-        if ($transactionSuccess) {
-            // Check if there was no insufficient balance
-            if (!isset($alertMessage)) {
-                echo '<div class="alert alert-success mt-3" role="alert">Transaction submitted successfully!</div>';
-            }
-        }
-    }
-    ?>
-</form>
-                    </div>
+                        $totalWeight += $weight;
+                        $totalPrice += $cartItem['unit_price'];
+                        $productCount++; // Increment the counter for each product
+                        ?>
+                        <tr>
+                            <td><?php echo $cartItem['item']; ?></td>
+                            <!-- <td><?php echo $cartItem['quantity']; ?></td> -->
+                            <td><?php echo $weight; ?></td>
+                            <td><?php echo $cartItem['unit_price']; ?></td>
+                            <td>
+                                <form method="post">
+                                    <input type="hidden" name="remove_from_cart" value="<?php echo $cartItem['barcode']; ?>">
+                                    <button type="submit" class="btn btn-danger btn-sm">X</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php } ?>
+                    <tr>
+                        <td colspan="2"></td>
+                        <td>Total Weight: <?php echo $totalWeight; ?></td>
+                        <td>Total Price: <?php echo $totalPrice; ?></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Display the number of products added to the cart -->
+            <p>Total Items in Cart: <strong><?php echo $productCount; ?></strong></p>
+
+            <form method="post">
+                <button type="submit" name="clear_cart" class="btn btn-danger">Clear Cart</button>
+            </form>
+            <form method="post" class="mt-3">
+                <div class="form-group">
+                    <input type="text" name="rfid_card_id" required placeholder="RFID Card ID" class="form-control">
                 </div>
-            </div>
+                <button type="submit" name="submit_transaction" class="btn btn-success">Submit Transaction</button>
+                <?php
+                if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_transaction'])) {
+                    if ($transactionSuccess) {
+                        // Check if there was no insufficient balance
+                        if (!isset($alertMessage)) {
+                            echo '<div class="alert alert-success mt-3" role="alert">Transaction submitted successfully!</div>';
+                        }
+                    }
+                }
+                ?>
+            </form>
+        </div>
+    </div>
+</div>
+
         </div>
         <form method="post">
             <button type="submit" name="logout" class="btn btn-danger">Logout</button>
