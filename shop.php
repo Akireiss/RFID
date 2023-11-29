@@ -44,6 +44,32 @@ function auditTrail($event_type, $details)
 
 $rfid_card_id = isset($_GET['rfid_card_id']) ? $_GET['rfid_card_id'] : '';
 
+function getBalanceFromDatabase($mysqli, $rfid_card_id) {
+    // Implement your logic to fetch the balance from the database based on $rfid_card_id
+    // Replace the following query with your actual database query
+    $query = "SELECT balance FROM rfid_cards WHERE rfid_card_id = ?";
+    $stmt = $mysqli->prepare($query);
+
+    // Bind the RFID card ID parameter
+    $stmt->bind_param("s", $rfid_card_id);
+
+    // Execute the query
+    $stmt->execute();
+
+    // Bind the result variable
+    $stmt->bind_result($balance);
+
+    // Fetch the result
+    $stmt->fetch();
+
+    // Close the statement
+    $stmt->close();
+
+    return $balance;
+}
+
+// Rest of your existing code...
+
 if (!empty($rfid_card_id)) {
     // Fetch customer information based on the RFID card ID
     $customer_id = getCustomerIdByRfidCard($mysqli, $rfid_card_id);
@@ -53,8 +79,11 @@ if (!empty($rfid_card_id)) {
         $customerInfo = getCustomerInfoById($mysqli, $customer_id);
         $customerName = $customerInfo['first_name'] . ' ' . $customerInfo['last_name'];
 
-        // Display the customer's name on the shop page
-        // echo '<div>Welcome, ' . $customerName . '!</div>';
+        // Fetch the balance from the database based on $rfid_card_id
+        $balance = getBalanceFromDatabase($mysqli, $rfid_card_id);
+
+        // Display the customer's name and balance on the shop page
+        // echo '<div>Welcome, ' . $customerName . '! Your Balance: $' . number_format($balance, 2) . '</div>';
     } else {
         echo '<div>Customer not found.</div>';
     }
@@ -407,6 +436,9 @@ include 'includes/footer.php';
             </div>
 
 <div class="col-md-6">
+<span class="d-none d-md-block ps-2" style="font-weight: bold;"><?php echo "Your Balance is: ₱" . $balance . ".00"; ?>
+
+</span>
     <div class="card">
         <div class="card-header pb-0 px-3">
             <h6 class="mb-0">General Bill</h6>
