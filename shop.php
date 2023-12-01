@@ -44,7 +44,8 @@ function auditTrail($event_type, $details)
 
 $rfid_card_id = isset($_GET['rfid_card_id']) ? $_GET['rfid_card_id'] : '';
 
-function getBalanceFromDatabase($mysqli, $rfid_card_id) {
+function getBalanceFromDatabase($mysqli, $rfid_card_id)
+{
     // Implement your logic to fetch the balance from the database based on $rfid_card_id
     // Replace the following query with your actual database query
     $query = "SELECT balance FROM rfid_cards WHERE rfid_card_id = ?";
@@ -384,7 +385,7 @@ include 'includes/footer.php';
         }
     </style>
 
-<script>
+    <script>
         function cancelBarcode() {
             document.getElementById('barcode').value = '';
             document.getElementById('productInfo').innerHTML = '';
@@ -394,7 +395,7 @@ include 'includes/footer.php';
 
 <body>
     <div class="container">
-    <span class="d-none d-md-block ps-2" style="font-weight: bold;"><?php echo $customerName; ?></span>
+        <span class="d-none d-md-block ps-2" style="font-weight: bold;"><?php echo $customerName; ?></span>
         <div class="row">
             <div class="col-md-6">
                 <div class="card">
@@ -402,127 +403,281 @@ include 'includes/footer.php';
                         <h6 class="mb-0">Billing Information</h6>
                     </div>
                     <div class="card-body">
-                        <form method="post" id="barcodeForm">
-                            <div class="form-group">
-                                <label for="barcode" class="form-label">Barcode:</label>
-                                <div class="input-group">
-                                    <input type="text" name="barcode" id="barcode" class="form-control" required value="<?php echo isset($_POST['barcode']) ? $_POST['barcode'] : ''; ?>">
-                                    <div class="input-group-btn">
-                                        <button type="button" class="btn btn-secondary" onclick="cancelBarcode()">Cancel</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                        <div id="productInfo" class="mt-3">
-                            <?php if (!empty($productInfo)) : ?>
-                                <ul class="list-group">
-                                    <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
-                                        <div class="d-flex flex-column">
-                                            <span class="mb-2 text-xs">Item Description: <span class="text-dark font-weight-bold ms-sm-2"><?php echo $productInfo['item']; ?></span></span>
-                                            <span class="mb-2 text-xs">Quantity: <span class="text-dark font-weight-bold ms-sm-2"><?php echo $productInfo['quantity']; ?></span></span>
-                                            <span class="mb-2 text-xs">Unit Price: <span class="text-dark ms-sm-2 font-weight-bold"><?php echo $productInfo['unit_price']; ?></span></span>
-                                            <span class="text-xs">Weight: <span class="text-dark ms-sm-2 font-weight-bold"><?php echo $productInfo['weight']; ?></span></span>
-                                        </div>
-                                    </li>
-                                </ul>
-                                <form method="post">
-                                    <input type="hidden" name="barcode" value="<?php echo $productInfo['barcode']; ?>">
-                                    <button type="submit" name="add_to_cart" class="btn btn-primary">Add to Cart</button>
-                                </form>
-                            <?php endif; ?>
+    <form method="post" id="barcodeForm">
+        <div class="form-group">
+            <label for="barcode" class="form-label">Barcode:</label>
+            <div class="input-group">
+                <input type="text" name="barcode" id="barcode" class="form-control" required value="<?php echo isset($_POST['barcode']) ? $_POST['barcode'] : ''; ?>">
+                <div class="input-group-btn">
+                    <button type="button" class="btn btn-secondary" onclick="cancelBarcode()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div id="productInfo" class="mt-3">
+    <?php if (!empty($productInfo) && $productInfo['quantity'] > 0) : ?>
+    <ul class="list-group">
+        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg" data-barcode="<?php echo $productInfo['barcode']; ?>">
+            <div class="d-flex flex-column">
+                <span class="mb-2 text-xs">Item Description: <span class="text-dark font-weight-bold ms-sm-2"><?php echo $productInfo['item']; ?></span></span>
+                <span class="mb-2 text-xs">Available Quantity: <span id="availableQuantity" class="text-dark font-weight-bold ms-sm-2"><?php echo $productInfo['quantity']; ?></span></span>
+                <span class="mb-2 text-xs">Unit Price: <span class="text-dark ms-sm-2 font-weight-bold"><?php echo $productInfo['unit_price']; ?></span></span>
+                <span class="text-xs">Weight: <span class="text-dark ms-sm-2 font-weight-bold"><?php echo $productInfo['weight']; ?></span></span>
+            </div>
+        </li>
+    </ul>
+    <div class="mb-2 text-xs">
+        <label for="quantity">How Many Quantity:</label>
+        <input type="number" name="quantity" id="quantity" class="form-control" value="1" min="1" max="<?php echo $productInfo['quantity']; ?>" onchange="updateDisplayedQuantity()">
+    </div>
+    <form method="post">
+        <input type="hidden" name="barcode" value="<?php echo $productInfo['barcode']; ?>">
+        <input type="hidden" name="quantity" id="inputQuantity" value="1">
+
+        <button type="submit" name="add_to_cart" class="btn btn-primary">Add to Cart</button>
+    </form>
+<?php elseif (!empty($productInfo) && $productInfo['quantity'] <= 0) : ?>
+    <p class="text-danger">Sorry, this product is out of stock.</p>
+<?php endif; ?>
+    </div>
+</div>
+
+<script>
+    // Update the displayed quantity when the input changes
+    function updateDisplayedQuantity() {
+        var selectedQuantity = parseInt(document.getElementById('quantity').value);
+        var availableQuantity = parseInt(document.getElementById('availableQuantity').innerText);
+
+        if (selectedQuantity > availableQuantity) {
+            document.getElementById('quantity').value = availableQuantity;
+        }
+
+        // Set the input quantity for form submission
+        document.getElementById('inputQuantity').value = selectedQuantity;
+
+        // Update the displayed quantity in the table
+        document.getElementById('displayedQuantity').innerText = selectedQuantity;
+    }
+</script>
+
+
+
+
+
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <span class="d-none d-md-block ps-2" style="font-weight: bold;"><?php echo "Your Balance is: ₱" . $balance . ".00"; ?>
+                </span>
+                <div class="card">
+                    <div class="card-header pb-0 px-3">
+                        <h6 class="mb-0">General Bill</h6>
+                    </div>
+                    <div class="card-body">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Weight</th>
+                <th>Price</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            if (!isset($_SESSION['cart'])) {
+                $_SESSION['cart'] = array();
+            }
+            $totalWeight = 0;
+            $totalPrice = 0;
+            $productCount = 0; // Counter for the number of products in the cart
+
+            foreach ($_SESSION['cart'] as $cartItem) {
+                $weight = floatval($cartItem['weight']);
+                $totalWeight += $weight;
+                $productCount++;
+            
+                $inputQuantity = isset($_POST['barcode']) && $_POST['barcode'] == $cartItem['barcode'] && isset($_POST['quantity']) ? $_POST['quantity'] : $cartItem['quantity'];
+                $itemTotalPrice = $cartItem['unit_price'] * $inputQuantity;
+            
+                if ($inputQuantity !== '') {
+                    ?>
+                    <tr>
+                        <td><?php echo $cartItem['item']; ?></td>
+                        <td>
+                            <input type="number" name="quantity_edit[]" value="<?php echo $inputQuantity; ?>" min="1" class="form-control" oninput="updateItemDetails(this, '<?php echo $cartItem['barcode']; ?>', '<?php echo $cartItem['weight']; ?>', '<?php echo $cartItem['unit_price']; ?>')">
+                        </td>
+                        <td id="itemWeight_<?php echo $cartItem['barcode']; ?>"><?php echo $weight; ?></td>
+                        <td id="itemTotalPrice_<?php echo $cartItem['barcode']; ?>"><?php echo number_format($itemTotalPrice, 2); ?></td>
+                        <td>
+                            <form method="post">
+                                <input type="hidden" name="remove_from_cart" value="<?php echo $cartItem['barcode']; ?>">
+                                <button type="submit" class="btn btn-danger btn-sm">X</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <?php
+                    $totalPrice += $itemTotalPrice;
+                }
+            }
+            ?>
+             
+             <tr>
+    <td colspan="2"></td>
+    <td>Total Weight: <span id="grandTotalWeight"><?php echo number_format($totalWeight, 2); ?></span></td>
+    <td>Total Price: <span id="grandTotalPrice"><?php echo number_format($totalPrice, 2); ?></span></td>
+</tr>
+
+        </tbody>
+    </table>
+    <div id="removeProductsMessage" class="alert alert-danger mt-3" style="display: none;">
+        Remove some Products so that you can continue with the transaction.
+    </div>
+
+    <!-- Display the number of products added to the cart -->
+    <p>Total Items in Cart: <strong><?php echo $productCount; ?></strong></p>
+
+    <form method="post">
+        <button type="submit" name="clear_cart" class="btn btn-danger">Clear Cart</button>
+    </form>
+    <form method="post" class="mt-3" onsubmit="return checkBalance()">
+        <div class="form-group">
+            <input type="text" name="rfid_card_id" required placeholder="RFID Card ID" class="form-control">
+        </div>
+        <button type="submit" name="submit_transaction" class="btn btn-success">Submit Transaction</button>
+        <?php
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_transaction'])) {
+            if ($transactionSuccess) {
+                // Check if there was no insufficient balance
+                if (!isset($alertMessage)) {
+                    echo '<div class="alert alert-success mt-3" role="alert">Transaction submitted successfully!</div>';
+                }
+            }
+        }
+        ?>
+    </form>
+</div>
+<script>
+    function updateItemDetails(input, barcode, initialWeight, unitPrice) {
+        var quantity = parseInt(input.value);
+        var updatedWeight = quantity * parseFloat(initialWeight);
+        var itemTotalPrice = quantity * parseFloat(unitPrice);
+
+        document.getElementById('itemWeight_' + barcode).innerText = updatedWeight.toFixed(2);
+        document.getElementById('itemTotalPrice_' + barcode).innerText = itemTotalPrice.toFixed(2);
+
+        updateGrandTotalWeight();
+        updateGrandTotalPrice();
+    }
+
+    function updateGrandTotalWeight() {
+        var grandTotalWeight = 0;
+        var itemWeights = document.querySelectorAll('[id^="itemWeight_"]');
+
+        itemWeights.forEach(function (itemWeight) {
+            grandTotalWeight += parseFloat(itemWeight.innerText);
+        });
+
+        document.getElementById('grandTotalWeight').innerText = grandTotalWeight.toFixed(2);
+    }
+
+    function updateGrandTotalPrice() {
+        var grandTotalPrice = 0;
+        var itemTotalPrices = document.querySelectorAll('[id^="itemTotalPrice_"]');
+
+        itemTotalPrices.forEach(function (itemTotalPrice) {
+            grandTotalPrice += parseFloat(itemTotalPrice.innerText);
+        });
+
+        document.getElementById('grandTotalPrice').innerText = grandTotalPrice.toFixed(2);
+    }
+</script>
+
+<script>
+    function setQuantity() {
+        var inputQuantity = document.getElementById('quantity').value;
+        document.getElementById('inputQuantity').value = inputQuantity;
+    }
+</script>
+                </div>
+            </div>
+            <div class="modal fade" id="insufficientBalanceModal" tabindex="-1" role="dialog" aria-labelledby="insufficientBalanceModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="insufficientBalanceModalLabel">Insufficient Balance</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Your balance is insufficient for this transaction. Do you want to continue?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal()">No, close</button>
+                            <button type="button" class="btn btn-primary" onclick="removeProducts()">Yes, remove products</button>
                         </div>
                     </div>
                 </div>
             </div>
-
-<div class="col-md-6">
-<span class="d-none d-md-block ps-2" style="font-weight: bold;"><?php echo "Your Balance is: ₱" . $balance . ".00"; ?>
-
-</span>
-    <div class="card">
-        <div class="card-header pb-0 px-3">
-            <h6 class="mb-0">General Bill</h6>
-        </div>
-        <div class="card-body">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <!-- <th>Quantity</th> -->
-                        <th>Weight</th>
-                        <th>Price</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    if (!isset($_SESSION['cart'])) {
-                        $_SESSION['cart'] = array();
-                    }
-                    $totalWeight = 0;
-                    $totalPrice = 0;
-                    $productCount = 0; // Counter for the number of products in the cart
-
-                    foreach ($_SESSION['cart'] as $cartItem) {
-                        // Cast $cartItem['weight'] to float
-                        $weight = floatval($cartItem['weight']);
-
-                        $totalWeight += $weight;
-                        $totalPrice += $cartItem['unit_price'];
-                        $productCount++; // Increment the counter for each product
-                        ?>
-                        <tr>
-                            <td><?php echo $cartItem['item']; ?></td>
-                            <!-- <td><?php echo $cartItem['quantity']; ?></td> -->
-                            <td><?php echo $weight; ?></td>
-                            <td><?php echo $cartItem['unit_price']; ?></td>
-                            <td>
-                                <form method="post">
-                                    <input type="hidden" name="remove_from_cart" value="<?php echo $cartItem['barcode']; ?>">
-                                    <button type="submit" class="btn btn-danger btn-sm">X</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php } ?>
-                    <tr>
-                        <td colspan="2"></td>
-                        <td>Total Weight: <?php echo $totalWeight; ?></td>
-                        <td>Total Price: <?php echo $totalPrice; ?></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <!-- Display the number of products added to the cart -->
-            <p>Total Items in Cart: <strong><?php echo $productCount; ?></strong></p>
-
-            <form method="post">
-                <button type="submit" name="clear_cart" class="btn btn-danger">Clear Cart</button>
-            </form>
-            <form method="post" class="mt-3">
-                <div class="form-group">
-                    <input type="text" name="rfid_card_id" required placeholder="RFID Card ID" class="form-control">
-                </div>
-                <button type="submit" name="submit_transaction" class="btn btn-success">Submit Transaction</button>
-                <?php
-                if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_transaction'])) {
-                    if ($transactionSuccess) {
-                        // Check if there was no insufficient balance
-                        if (!isset($alertMessage)) {
-                            echo '<div class="alert alert-success mt-3" role="alert">Transaction submitted successfully!</div>';
-                        }
-                    }
-                }
-                ?>
-            </form>
-        </div>
-    </div>
-</div>
 
         </div>
         <form method="post">
             <button type="submit" name="logout" class="btn btn-danger">Logout</button>
         </form>
     </div>
+
+
+    <!-- Add these links to the head section of your HTML document -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function checkBalance() {
+            var balance = <?php echo $balance; ?>;
+            var totalPrice = <?php echo $totalPrice; ?>;
+
+            if (totalPrice > balance) {
+                $('#insufficientBalanceModal').modal('show'); // Show the modal
+                return false; // Prevent form submission
+            }
+
+            return true; // Continue with form submission
+        }
+
+        function removeProducts() {
+            // Add logic here to remove products from the list or perform any other action
+            // For demonstration purposes, let's assume you set a flag when products are removed
+            var productsRemoved = true;
+
+            // Display the "Remove Products" message
+            $('#removeProductsMessage').show();
+
+            // Hide the modal
+            $('#insufficientBalanceModal').modal('hide');
+
+            // Check if balance is now sufficient
+            var balance = <?php echo $balance; ?>;
+            var totalPrice = <?php echo $totalPrice; ?>;
+
+            if (totalPrice <= balance && productsRemoved) {
+                // If the balance is now sufficient and products were removed, hide the message
+                $('#removeProductsMessage').hide();
+            }
+        }
+
+        // Close the modal if the user clicks "No" or the close button
+        $('#insufficientBalanceModal').on('hidden.bs.modal', function() {
+            // Optionally, you can perform additional actions here when the modal is closed
+        });
+
+        function closeModal() {
+            $('#insufficientBalanceModal').modal('hide');
+        }
+    </script>
+
 
     <script>
         const barcodeInput = document.getElementById('barcode');
