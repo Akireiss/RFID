@@ -1,98 +1,7 @@
+<?php
 
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RFID Card Reader</title>
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script> -->
-    <link href="assets/css/@5.0.2.css" rel="stylesheet">
-<script src="assets/js/@5.0.2.js"></script>
-
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .container {
-            text-align: center;
-            margin: 30px auto;
-            max-width: 900px;
-            background-color: #495057;
-            padding: 50px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
-            color: #ffffff;
-        }
-
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            color: #ffc107;
-        }
-
-        .rfid-input {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 2px solid #6c757d;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-
-        .rfid-input:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-
-        .link-group {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .link-group a {
-            text-decoration: none;
-            margin: 5px;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .link-group a:hover {
-            background-color: #007bff;
-            color: #ffffff;
-        }
-
-        .modal-content {
-            background-color: #343a40;
-            color: #ffffff;
-        }
-
-        .modal-title {
-            color: #ffc107;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d !important;
-        }
-
-        .btn-primary {
-            background-color: #007bff !important;
-        }
-
-        .btn-danger {
-            background-color: #dc3545 !important;
-        }
-    </style>
-</head>
-
-<body>
+include 'includes/indexheader.php';
+?>
     <div class="container">
         <h1>Welcome to DMPC</h1>
         <p class="m-3 fw-bold">Scan your RFID card:</p>
@@ -106,6 +15,78 @@
             <a href="index.php" class="btn btn-md btn-danger" id="cancelButton">Cancel</a>
         </div>
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="rfidNotFoundModal" tabindex="-1" aria-labelledby="rfidNotFoundModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rfidNotFoundModalLabel">RFID Card Not Found</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>The RFID card ID you entered is not found. Please check your card ID and try again.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add your Bootstrap or other JS framework links here -->
+<!-- 
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script> jQuery library
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> Bootstrap library -->
+
+    <script>
+        var modalVisible = false; // Variable to track if the modal is currently visible
+
+        function checkRFID() {
+            var rfidInput = document.getElementById('manualRFIDInput').value;
+
+            $.ajax({
+                type: "GET",
+                url: "check_rfid_existence.php", // Replace with the actual path to your PHP script
+                data: {
+                    rfid_card_id: rfidInput
+                },
+                success: function(response) {
+                    if (response === 'true') {
+                        // If RFID exists, show the buttons
+                        document.getElementById('button-container').style.display = 'block';
+                        hideRfidNotFoundModal(); // Hide the modal if it's currently visible
+                    } else {
+                        // If RFID doesn't exist, show the modal and hide the buttons
+                        if (!modalVisible) {
+                            $('#rfidNotFoundModal').modal('show');
+                            modalVisible = true; // Set the flag to indicate that the modal is now visible
+                        }
+                        document.getElementById('button-container').style.display = 'none';
+                    }
+                },
+                error: function() {
+                    console.log("Error in AJAX request");
+                }
+            });
+        }
+
+        // Function to hide the RFID not found modal
+        function hideRfidNotFoundModal() {
+            if (modalVisible) {
+                $('#rfidNotFoundModal').modal('hide');
+                modalVisible = false; // Reset the flag when the modal is hidden
+            }
+        }
+
+        // Trigger the checkRFID function immediately after the RFID input changes
+        document.getElementById('manualRFIDInput').addEventListener('input', checkRFID);
+
+        // Attach the hideRfidNotFoundModal function to the modal's hidden.bs.modal event
+        $('#rfidNotFoundModal').on('hidden.bs.modal', function() {
+            modalVisible = false; // Reset the flag when the modal is hidden by other means (e.g., close button)
+        });
+    </script>
 
     <!-- Modal for Check Balance -->
     <div class="modal fade" id="checkBalanceModal" tabindex="-1" aria-labelledby="checkBalanceModalLabel" aria-hidden="true">
@@ -188,7 +169,7 @@
                                 var customerName = response.name;
                                 var balance = response.balance;
                                 document.getElementById('customer_data').value = customerName;
-                                document.getElementById('balance').value = balance ;
+                                document.getElementById('balance').value = balance;
                             }
                         };
 
@@ -216,19 +197,19 @@
             document.getElementById('manualRFIDInput').addEventListener('input', checkInput);
 
             document.getElementById('shopButton').addEventListener('click', function() {
-        var rfid_card_id = document.getElementById('manualRFIDInput').value.trim();
-        if (rfid_card_id !== '') {
-            window.location.href = 'shop.php?rfid_card_id=' + rfid_card_id;
-        }
-    });
+                var rfid_card_id = document.getElementById('manualRFIDInput').value.trim();
+                if (rfid_card_id !== '') {
+                    window.location.href = 'shop.php?rfid_card_id=' + rfid_card_id;
+                }
+            });
 
-    document.getElementById('shopButtonModal').addEventListener('click', function() {
-        var rfid_card_id = document.getElementById('manualRFIDInput').value.trim();
-        if (rfid_card_id !== '') {
-            // Update the href attribute of the "Shop" button inside the modal
-            document.getElementById('shopButtonModal').href = 'shop.php?rfid_card_id=' + rfid_card_id;
-        }
-    });
+            document.getElementById('shopButtonModal').addEventListener('click', function() {
+                var rfid_card_id = document.getElementById('manualRFIDInput').value.trim();
+                if (rfid_card_id !== '') {
+                    // Update the href attribute of the "Shop" button inside the modal
+                    document.getElementById('shopButtonModal').href = 'shop.php?rfid_card_id=' + rfid_card_id;
+                }
+            });
 
 
             document.getElementById('cancelButton').addEventListener('click', function() {
@@ -237,58 +218,58 @@
             });
 
             function displayTransactions(transactions) {
-    console.log("Received transactions:", transactions);
+                console.log("Received transactions:", transactions);
 
-    var transactionsTableBody = document.getElementById('transactionsTableBody');
-    transactionsTableBody.innerHTML = '';
+                var transactionsTableBody = document.getElementById('transactionsTableBody');
+                transactionsTableBody.innerHTML = '';
 
-    var groupedTransactions = groupTransactionsByTimestamp(transactions);
+                var groupedTransactions = groupTransactionsByTimestamp(transactions);
 
-    groupedTransactions.forEach(function(group) {
-        console.log("Processing group:", group);
+                groupedTransactions.forEach(function(group) {
+                    console.log("Processing group:", group);
 
-        var row = document.createElement('tr');
-        row.innerHTML =
-            '<td>' + group.timestamp + '</td>' +
-            '<td>' + group.transaction_type + '</td>' +
-            '<td>' + group.amount.join(', ') + '</td>'; // Concatenate t_amount into a single cell
+                    var row = document.createElement('tr');
+                    row.innerHTML =
+                        '<td>' + group.timestamp + '</td>' +
+                        '<td>' + group.transaction_type + '</td>' +
+                        '<td>' + group.amount.join(', ') + '</td>'; // Concatenate t_amount into a single cell
 
-        transactionsTableBody.appendChild(row);
-    });
+                    transactionsTableBody.appendChild(row);
+                });
 
-    viewTransactionsModal.show(); // Show the modal here
+                viewTransactionsModal.show(); // Show the modal here
 
-    viewTransactionsModal.addEventListener('hidden.bs.modal', function() {
-        // This event is triggered when the modal is completely hidden
-        // You can add additional logic here if needed
-        console.log('Modal is hidden');
-    });
-}
+                viewTransactionsModal.addEventListener('hidden.bs.modal', function() {
+                    // This event is triggered when the modal is completely hidden
+                    // You can add additional logic here if needed
+                    console.log('Modal is hidden');
+                });
+            }
 
-// Helper function to group transactions by timestamp
-function groupTransactionsByTimestamp(transactions) {
-    var groupedTransactions = [];
+            // Helper function to group transactions by timestamp
+            function groupTransactionsByTimestamp(transactions) {
+                var groupedTransactions = [];
 
-    transactions.forEach(function(transaction) {
-        var existingGroup = groupedTransactions.find(function(group) {
-            return group.timestamp === transaction.timestamp;
-        });
+                transactions.forEach(function(transaction) {
+                    var existingGroup = groupedTransactions.find(function(group) {
+                        return group.timestamp === transaction.timestamp;
+                    });
 
-        if (existingGroup) {
-            // If a group with the same timestamp exists, append the t_amount to the existing group
-            existingGroup.amount.push(transaction.amount);
-        } else {
-            // If no group with the same timestamp exists, create a new group
-            groupedTransactions.push({
-                timestamp: transaction.timestamp,
-                transaction_type: transaction.transaction_type,
-                amount: [transaction.amount] // Start with an array containing the t_amount
-            });
-        }
-    });
+                    if (existingGroup) {
+                        // If a group with the same timestamp exists, append the t_amount to the existing group
+                        existingGroup.amount.push(transaction.amount);
+                    } else {
+                        // If no group with the same timestamp exists, create a new group
+                        groupedTransactions.push({
+                            timestamp: transaction.timestamp,
+                            transaction_type: transaction.transaction_type,
+                            amount: [transaction.amount] // Start with an array containing the t_amount
+                        });
+                    }
+                });
 
-    return groupedTransactions;
-}
+                return groupedTransactions;
+            }
 
 
 
